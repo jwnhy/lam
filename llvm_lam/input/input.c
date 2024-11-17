@@ -1,24 +1,10 @@
-int g;
-int foo(int a) {
-  return a * 2;
-}
-
-int bar(int a, int b) {
-  return (a + foo(b) * 2);
-}
-
-int fez(int a, int b, int c) {
-  return (a + bar(a, b) * 2 + c * 3);
-}
-
+#include <stdint.h>
+#include <stdio.h>
 int main(int argc, char *argv[]) {
-  int a = 123;
-  int ret = 0;
-
-  ret += foo(a);
-  ret += bar(a, ret);
-  ret += fez(a, ret, 123);
-  g = 10;
-
-  return ret + g;
+  int a = 10;
+  uint64_t p = (uint64_t)&a;
+  p &= ~(0x1ull << 48);
+  a = *(int*)p;
+  printf("%d\n", a);
+  return a;
 }

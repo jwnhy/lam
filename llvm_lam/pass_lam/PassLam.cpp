@@ -1,3 +1,4 @@
+#include "stdlib.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/PassManager.h"
@@ -7,6 +8,8 @@
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
+
+const uint64_t LAM_MASK = ~(0x3fffull << 48);
 
 namespace {
 class LamModulePass : public PassInfoMixin<LamModulePass> {
@@ -18,7 +21,20 @@ public:
       errs() << "Function: " << F.getName() << "\n";
       for (BasicBlock &BB : F) {
         for (Instruction &I : BB) {
-          errs() << "  " << I << "\n";
+          if (I.getOpcode() == Instruction::IntToPtr) {
+            BinaryOperator *MaskInst = BinaryOperator::CreateAnd(
+                I.getOperand(0),
+                ConstantInt::get(I.getOperand(0)->getType(), LAM_MASK));
+            printf("%lx\n", LAM_MASK);
+            MaskInst->insertBefore(&I);
+          }
+        }
+      }
+    }
+    for (Function &F : M) {
+      for (BasicBlock &BB : F) {
+        for (Instruction &I : BB) {
+          errs() << "  " << I << I.getOperand(0)->getName() << "\n";
         }
       }
     }
