@@ -9,7 +9,7 @@
 
 using namespace llvm;
 
-const uint64_t LAM_MASK = ~(0x3fffull << 48);
+const uint64_t LAM_MASK = ~(0x3full << 57);
 
 namespace {
 class LamModulePass : public PassInfoMixin<LamModulePass> {
@@ -18,27 +18,27 @@ public:
     for (Function &F : M) {
       if (F.isDeclaration())
         continue;
-      errs() << "Function: " << F.getName() << "\n";
       for (BasicBlock &BB : F) {
         for (Instruction &I : BB) {
           if (I.getOpcode() == Instruction::IntToPtr) {
             BinaryOperator *MaskInst = BinaryOperator::CreateAnd(
                 I.getOperand(0),
                 ConstantInt::get(I.getOperand(0)->getType(), LAM_MASK));
-            printf("%lx\n", LAM_MASK);
             MaskInst->insertBefore(&I);
+            I.setOperand(0, MaskInst);
           }
         }
       }
     }
     for (Function &F : M) {
+      errs() << "Function: " << F.getName() << "\n";
       for (BasicBlock &BB : F) {
         for (Instruction &I : BB) {
           errs() << "  " << I << I.getOperand(0)->getName() << "\n";
         }
       }
     }
-    return PreservedAnalyses::all();
+    return PreservedAnalyses::none();
   }
 
   static bool isRequired() { return true; }
